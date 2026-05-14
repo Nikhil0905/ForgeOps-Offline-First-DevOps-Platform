@@ -66,6 +66,21 @@ function emptyState(icon, text) {
   return `<div class="empty-state"><div class="empty-icon">${icon}</div><div class="empty-text">${text}</div></div>`;
 }
 
+// SVG icon helpers for empty states and dynamic content
+const ICONS = {
+  builds: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  deploys: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>',
+  repos: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  docker: '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.186.186 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.185V9.006a.186.186 0 0 0-.185-.186H5.136a.186.186 0 0 0-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 0 0 .184-.185V9.006a.186.186 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.184.186v1.887c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.227.328c-.29.419-.5.873-.62 1.349-.257 1.003-.124 1.943.383 2.749-.566.32-1.485.5-2.204.5H.526a.525.525 0 0 0-.526.522c-.015.976.093 1.95.325 2.899.337 1.23.882 2.15 1.622 2.735 1.307 1.024 3.423 1.612 5.768 1.612.548 0 1.097-.032 1.645-.094a11.783 11.783 0 0 0 3.598-1.14 9.168 9.168 0 0 0 2.46-1.79c1.347-1.42 2.153-3.008 2.746-4.375h.238c1.476 0 2.384-.597 2.884-1.098.333-.333.583-.726.735-1.16l.1-.343z"/></svg>',
+  shield: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  check: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  inbox: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+  file: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>',
+  star: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  branch: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  bolt: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+};
+
 function setInner(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
@@ -145,7 +160,7 @@ function renderHealth(data) {
   const overall = data.overall || 'unknown';
   const badge   = document.getElementById('health-badge');
   if (badge) {
-    badge.textContent = overall === 'healthy' ? '✅ All Systems Operational' : '⚠️ Degraded';
+    badge.textContent = overall === 'healthy' ? 'All Systems Operational' : 'Degraded';
     badge.className   = `section-badge${overall !== 'healthy' ? ' danger' : ''}`;
   }
 
@@ -188,7 +203,7 @@ function renderActivity(logs) {
   const feed = document.getElementById('activity-feed');
   if (!feed) return;
   if (!logs || !logs.length) {
-    feed.innerHTML = emptyState('📭', 'No recent activity found');
+    feed.innerHTML = emptyState(ICONS.inbox, 'No recent activity found');
     return;
   }
   feed.innerHTML = logs.map(item => {
@@ -212,7 +227,7 @@ async function loadBuilds() {
   if (!tbody) return;
 
   if (!data || !data.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="table-loading">${emptyState('🔨', 'No builds recorded yet')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="table-loading">${emptyState(ICONS.builds, 'No builds recorded yet')}</td></tr>`;
     return;
   }
 
@@ -235,7 +250,7 @@ async function loadDeployments() {
   if (!tbody) return;
 
   if (!data || !data.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="table-loading">${emptyState('🚀', 'No deployments recorded yet')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="table-loading">${emptyState(ICONS.deploys, 'No deployments recorded yet')}</td></tr>`;
     return;
   }
 
@@ -256,7 +271,7 @@ async function loadRepositories() {
   if (!grid) return;
 
   if (!data || !data.length) {
-    grid.innerHTML = emptyState('📁', 'No repositories found in Gitea');
+    grid.innerHTML = emptyState(ICONS.repos, 'No repositories found in Gitea');
     return;
   }
 
@@ -268,12 +283,12 @@ async function loadRepositories() {
     return `
     <a href="${absoluteUrl}" target="_blank" class="repo-card-link">
       <div class="repo-card">
-        <div class="repo-name">📁 ${r.name || r.full_name || '—'}</div>
+        <div class="repo-name">${ICONS.repos} ${r.name || r.full_name || '—'}</div>
         <div class="repo-desc">${r.description || '<em style="opacity:0.5">No description</em>'}</div>
         <div class="repo-meta">
-          ${r.language ? `<span class="repo-tag lang">⚡ ${r.language}</span>` : ''}
-          <span class="repo-tag">⭐ ${r.stars ?? 0}</span>
-          <span class="repo-tag">🌿 ${r.default_branch || 'main'}</span>
+          ${r.language ? `<span class="repo-tag lang">${ICONS.bolt} ${r.language}</span>` : ''}
+          <span class="repo-tag">${ICONS.star} ${r.stars ?? 0}</span>
+          <span class="repo-tag">${ICONS.branch} ${r.default_branch || 'main'}</span>
           <span class="repo-tag" style="font-size:10px;color:var(--text-muted)">${fmtTime(r.updated_at)}</span>
         </div>
       </div>
@@ -289,7 +304,7 @@ async function loadRegistry() {
   if (!grid) return;
 
   if (!data || !data.length) {
-    grid.innerHTML = emptyState('🐳', 'No images found in local registry');
+    grid.innerHTML = emptyState(ICONS.docker, 'No images found in local registry');
     if (badge) badge.textContent = '0 images';
     return;
   }
@@ -298,7 +313,7 @@ async function loadRegistry() {
 
   grid.innerHTML = data.map(img => `
     <div class="registry-card">
-      <div class="registry-image-name">🐳 ${img.repository}</div>
+      <div class="registry-image-name">${ICONS.docker} ${img.repository}</div>
       <div class="registry-tag-count">${img.tag_count} tag${img.tag_count !== 1 ? 's' : ''}</div>
       <div class="registry-tags">
         ${(img.tags || []).slice(0, 8).map(t =>
@@ -318,7 +333,7 @@ async function loadSecurity() {
   if (!list) return;
 
   if (!data || !data.length) {
-    list.innerHTML = emptyState('✅', 'No security findings — clean scan!');
+    list.innerHTML = emptyState(ICONS.check, 'No security findings — clean scan!');
     if (badge) { badge.textContent = 'Clean'; badge.className = 'section-badge'; }
     return;
   }
@@ -334,8 +349,8 @@ async function loadSecurity() {
         <span class="finding-type">${f.type || '—'}</span>
         <span class="finding-label">${f.label || f.reason || ''}</span>
       </div>
-      ${f.file ? `<div class="finding-file">📄 ${f.file}${f.line ? ` : line ${f.line}` : ''}</div>` : ''}
-      ${f.image ? `<div class="finding-file">🐳 ${f.image}</div>` : ''}
+      ${f.file ? `<div class="finding-file">${ICONS.file} ${f.file}${f.line ? ` : line ${f.line}` : ''}</div>` : ''}
+      ${f.image ? `<div class="finding-file">${ICONS.docker} ${f.image}</div>` : ''}
       ${f.snippet ? `<div class="finding-snippet">${escapeHtml(f.snippet)}</div>` : ''}
     </div>`).join('');
 }

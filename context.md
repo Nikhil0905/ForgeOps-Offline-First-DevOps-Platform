@@ -9,9 +9,10 @@
 |----------------|---------------------------------------------------------|
 | **Name**       | ForgeOps                                                |
 | **Full Name**  | Fully Offline Resilient GitOps & CI/CD Platform         |
-| **Location**   | `/home/0xlunatic/Downloads/Docker-Project/forgeops/`    |
+| **Repo**       | `github.com/Nikhil0905/ForgeOps-Offline-First-DevOps-Platform` |
+| **Org Repo**   | `github.com/Nikhil0905/ForgeOps-Org-repo`               |
 | **Created**    | 2026-05-07                                              |
-| **Status**     | 🟢 Active Development                                   |
+| **Status**     | ✅ Complete                                              |
 | **Purpose**    | Self-hosted offline-first DevOps for air-gapped/low-connectivity environments |
 
 ---
@@ -38,6 +39,9 @@
                               [Dashboard :8888]
                               [Prometheus :9090]
                               [Grafana :3001]
+                                         │
+                              [Sync Engine → GitHub]
+                              (projects/* branches)
 ```
 
 ---
@@ -45,7 +49,7 @@
 ## 📦 Services & Ports
 
 | Container                    | Image                    | Port(s)       | Role                        |
-|------------------------------|--------------------------|---------------|-----------------------------|
+|------------------------------|--------------------------|---------------|-----------------------------
 | `forgeops-nginx`             | nginx:1.25-alpine        | 80, 443       | Reverse proxy / router      |
 | `forgeops-gitea`             | gitea/gitea:1.21         | 3000, 2222    | Local Git server            |
 | `forgeops-jenkins`           | custom (jenkins/lts)     | 8080, 50000   | CI/CD engine                |
@@ -55,7 +59,7 @@
 | `forgeops-grafana`           | grafana/grafana          | 3001          | Metrics visualisation       |
 | `forgeops-dashboard-api`     | custom (python:3.11)     | 5050          | Flask REST API              |
 | `forgeops-dashboard-ui`      | custom (nginx)           | 8888          | SPA monitoring dashboard    |
-| `forgeops-sync-engine`       | custom (python:3.11)     | —             | Internet-aware sync         |
+| `forgeops-sync-engine`       | custom (python:3.11)     | —             | Internet-aware GitHub sync  |
 | `forgeops-backup-engine`     | custom (alpine)          | —             | Scheduled backups           |
 | `forgeops-deployment-engine` | custom (python:3.11)     | —             | Health-check deployer       |
 | `forgeops-security-scanner`  | custom (python:3.11)     | —             | Secrets + image scanner     |
@@ -67,8 +71,10 @@
 ```
 forgeops/
 ├── context.md                          ← YOU ARE HERE
-├── docker-compose.yml                  ← Full orchestration (all services)
+├── README.md                           ← User-facing documentation (with screenshots)
+├── docker-compose.yml                  ← Full orchestration (13 services)
 ├── .env                                ← All credentials & config vars
+├── .env.example                        ← Template for new deployments
 │
 ├── infrastructure/
 │   ├── nginx/nginx.conf                ← Reverse proxy routing rules
@@ -79,12 +85,11 @@ forgeops/
 │   │   └── plugins.txt                 ← Jenkins plugins to install
 │   ├── gitea/app.ini                   ← Gitea offline config (SQLite)
 │   └── monitoring/
-│       ├── prometheus.yml              ← Scrape targets config
-│       └── grafana/datasources.yml     ← Auto-provision Prometheus DS
+│       └── prometheus.yml              ← Scrape targets config
 │
 ├── services/
 │   ├── sync-engine/
-│   │   ├── sync.py                     ← Internet detection + sync loop
+│   │   ├── sync.py                     ← Branch-based GitHub sync engine
 │   │   ├── queue.json                  ← Persistent offline queue state
 │   │   └── Dockerfile
 │   ├── backup-engine/
@@ -102,13 +107,13 @@ forgeops/
 │
 ├── dashboard/
 │   ├── backend/
-│   │   ├── app.py                      ← Flask API (8 endpoints + /metrics)
+│   │   ├── app.py                      ← Flask API (12 endpoints + /metrics)
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
 │   └── frontend/
 │       ├── index.html                  ← SPA shell (7 pages)
-│       ├── style.css                   ← Premium dark theme
-│       ├── app.js                      ← Fetch + render logic
+│       ├── style.css                   ← Jenkins Classic theme
+│       ├── app.js                      ← Fetch + render logic (SVG icons)
 │       └── Dockerfile
 │
 ├── templates/
@@ -121,10 +126,17 @@ forgeops/
 ├── scripts/
 │   ├── install.sh                      ← Full bootstrap (run once)
 │   ├── healthcheck.sh                  ← Verify all services
-│   ├── sync.sh                         ← Manual sync trigger
+│   ├── sync.sh                         ← Manual sync trigger (shows status)
 │   └── rollback.sh                     ← Emergency rollback
 │
-└── docs/README.md                      ← User-facing documentation
+└── Screenshot_Visuals/                 ← Platform screenshots for README
+    ├── ForgeOps-Dashboard.png
+    ├── Celebration-app_Jenkins.png
+    ├── grafana_dashboard.png
+    ├── Gitea_Repos.png
+    ├── jenkins_dashboard.png
+    ├── nexus.png
+    └── webpage_Test_success.png
 ```
 
 ---
@@ -139,6 +151,25 @@ forgeops/
 | Grafana   | admin     | ForgeOps@Grafana2025     |
 
 > ⚠️ Change all passwords in `.env` before production use.
+
+---
+
+## 🔄 Sync Strategy
+
+The sync engine pushes each local Gitea repo as a **separate branch** in the single configured GitHub org repo:
+
+```
+Local Gitea repo                    GitHub (ForgeOps-Org-repo)
+─────────────────                   ────────────────────────────
+celebration-app         →           branch: projects/celebration-app
+sample-python-app       →           branch: projects/sample-python-app
+<any-new-project>       →           branch: projects/<new-project>
+```
+
+- **Single-repo PAT** — scoped to `ForgeOps-Org-repo` only, no broad permissions
+- **Offline queue** — changes are queued in `queue.json` and replayed on reconnect
+- **Auto-sync** — runs every 60 seconds (configurable via `SYNC_INTERVAL_SECONDS`)
+- **Code review** — projects must go through PR review before merging to `main`
 
 ---
 
@@ -206,19 +237,18 @@ docker compose up -d --no-deps dashboard-backend
 | 4     | Sync engine                 | ✅ Complete |
 | 5     | Monitoring dashboard        | ✅ Complete |
 | 6     | Security & recovery         | ✅ Complete |
+| 7     | UI modernization (SVG icons, branding) | ✅ Complete |
+| 8     | GitHub sync (branch-based)  | ✅ Complete |
 
 ---
 
-## 🔮 Future Enhancements
+## 🎨 Dashboard UI
 
-- [ ] AI log analysis (Jenkins failure pattern detection)
-- [ ] K3s offline Kubernetes cluster support
-- [ ] Multi-node edge deployment
-- [ ] USB/portable SSD mode
-- [ ] LDAP authentication integration
-- [ ] Webhook signature verification (Gitea → Jenkins HMAC)
-- [ ] Grafana dashboard JSON provisioning
-- [ ] Trivy offline DB bundling
+- **Theme**: Jenkins Classic (slate-based, monochrome palette)
+- **Font**: Roboto (Google Fonts)
+- **Icons**: Inline SVGs from `devicons` and `simple-icons` CDNs (no emojis)
+- **Branding**: "ForgeOps — Offline First DevOps Platform" in top navbar
+- **Layout**: Sidebar navigation (7 pages) + 3-column topbar (Brand | Context | Controls)
 
 ---
 
@@ -227,5 +257,9 @@ docker compose up -d --no-deps dashboard-backend
 | Date       | Change                                              | By         |
 |------------|-----------------------------------------------------|------------|
 | 2026-05-07 | Initial full platform scaffold created              | ForgeOps   |
+| 2026-05-14 | Dashboard UI modernized — SVG logos, branding       | ForgeOps   |
+| 2026-05-14 | Sync engine fixed — branch-based per-repo sync      | ForgeOps   |
+| 2026-05-14 | README moved to root with screenshot visuals        | ForgeOps   |
+| 2026-05-14 | .env.example synced, data/ removed, docs/ cleaned   | ForgeOps   |
 
 > **How to update this file**: After making changes to any component, add a row to the Change Log and update the relevant section above. This keeps AI assistants and collaborators in sync without reading all the code.

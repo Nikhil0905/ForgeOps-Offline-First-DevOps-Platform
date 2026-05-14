@@ -270,6 +270,7 @@ def security_findings():
         scanned_at = body.get("scanned_at", datetime.utcnow().isoformat())
         findings   = body.get("findings", [])
         with get_db() as db:
+            db.execute("DELETE FROM security_findings")
             for f in findings:
                 db.execute(
                     """INSERT INTO security_findings

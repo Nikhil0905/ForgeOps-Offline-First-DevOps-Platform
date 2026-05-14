@@ -1,6 +1,14 @@
 {
-  "pending_logs": [],
-  "last_sync": "2026-05-14T02:36:15.198160",
-  "last_offline": "2026-05-09T04:38:24.465326",
+  "pending_logs": [
+    {
+      "id": "68250c42-4a6d-4f3f-9437-1b9866e0f808",
+      "timestamp": "2026-05-14T07:53:28.190151",
+      "event": "forgeops_created",
+      "component": "admin_ui",
+      "details": "User admin_ui created project forgeops"
+    }
+  ],
+  "last_sync": "2026-05-14T18:24:35.551658",
+  "last_offline": "2026-05-14T08:48:52.862952",
   "online": true
 }

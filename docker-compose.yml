@@ -243,6 +243,7 @@ services:
       - "5050:5050"
     volumes:
       - dashboard-db:/data
+      - ./services/sync-engine/queue.json:/data/queue.json:ro
       - ./dashboard/backend/app.py:/app/app.py:ro
     networks:
       - forgeops-net
@@ -292,6 +293,8 @@ services:
     volumes:
       - ./services/sync-engine/sync.py:/app/sync.py
       - ./services/sync-engine/queue.json:/data/queue.json
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker:ro
     networks:
       - forgeops-net
     depends_on:

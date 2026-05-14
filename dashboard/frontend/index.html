@@ -7,15 +7,17 @@
   <title>ForgeOps — DevOps Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- CDN for simple-icons (brand logos) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-icons-font@v14/font/simple-icons.min.css" />
 </head>
 <body>
 
   <!-- ── Sidebar ─────────────────────────────────────────── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">⚙️</div>
+      <div class="brand-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
       <div class="brand-text">
         <span class="brand-name">ForgeOps</span>
         <span class="brand-tagline">DevOps Command Center</span>
@@ -24,35 +26,35 @@
 
     <nav class="sidebar-nav">
       <a class="nav-item active" data-page="overview" id="nav-overview">
-        <span class="nav-icon">🏠</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
         <span>Overview</span>
       </a>
       <a class="nav-item" data-page="builds" id="nav-builds">
-        <span class="nav-icon">🔨</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5.71 11.44c-.18.19-.44.3-.71.3s-.53-.11-.71-.3a1.003 1.003 0 0 1 0-1.42L7.59 6.7 4.29 3.41c-.18-.19-.29-.44-.29-.71 0-.55.45-1 1-1 .27 0 .52.11.71.29l4 4c.18.19.29.45.29.71 0 .27-.11.52-.29.71l-4 4zM13 12h-2c-.55 0-1 .45-1 1s.45 1 1 1h2c.55 0 1-.45 1-1s-.45-1-1-1z" transform="scale(1.2) translate(1,2)"/></svg></span>
         <span>Builds</span>
       </a>
       <a class="nav-item" data-page="deployments" id="nav-deployments">
-        <span class="nav-icon">🚀</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg></span>
         <span>Deployments</span>
       </a>
       <a class="nav-item" data-page="repositories" id="nav-repositories">
-        <span class="nav-icon">📁</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></span>
         <span>Repositories</span>
       </a>
       <a class="nav-item" data-page="registry" id="nav-registry">
-        <span class="nav-icon">🐳</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.186.186 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.185V9.006a.186.186 0 0 0-.185-.186H5.136a.186.186 0 0 0-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 0 0 .184-.185V9.006a.186.186 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.184.186v1.887c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.227.328c-.29.419-.5.873-.62 1.349-.257 1.003-.124 1.943.383 2.749-.566.32-1.485.5-2.204.5H.526a.525.525 0 0 0-.526.522c-.015.976.093 1.95.325 2.899.337 1.23.882 2.15 1.622 2.735 1.307 1.024 3.423 1.612 5.768 1.612.548 0 1.097-.032 1.645-.094a11.783 11.783 0 0 0 3.598-1.14 9.168 9.168 0 0 0 2.46-1.79c1.347-1.42 2.153-3.008 2.746-4.375h.238c1.476 0 2.384-.597 2.884-1.098.333-.333.583-.726.735-1.16l.1-.343z"/></svg></span>
         <span>Registry</span>
       </a>
       <a class="nav-item" data-page="monitoring" id="nav-monitoring">
-        <span class="nav-icon">📊</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 1.846c5.595 0 10.154 4.559 10.154 10.154S17.595 22.154 12 22.154 1.846 17.595 1.846 12 6.405 1.846 12 1.846zm-.508 3.59l-.085 6.17 4.246 3.014.49-.68-3.72-2.838.077-5.665z"/></svg></span>
         <span>Monitoring</span>
       </a>
       <a class="nav-item" data-page="security" id="nav-security">
-        <span class="nav-icon">🔒</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
         <span>Security</span>
       </a>
       <a class="nav-item" data-page="logs" id="nav-logs">
-        <span class="nav-icon">📋</span>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>
         <span>Logs</span>
       </a>
     </nav>
@@ -70,13 +72,20 @@
 
     <!-- Top Bar -->
     <header class="topbar">
-      <div class="topbar-left">
+      <div class="topbar-brand">
+        <svg class="topbar-logo" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <div class="topbar-brand-text">
+          <span class="topbar-project-name">ForgeOps</span>
+          <span class="topbar-project-tagline">Offline First DevOps Platform</span>
+        </div>
+      </div>
+      <div class="topbar-center">
         <h1 class="page-title" id="page-title">System Overview</h1>
         <span class="page-subtitle" id="page-subtitle">Real-time platform health</span>
       </div>
       <div class="topbar-right">
         <div class="last-updated" id="last-updated">Fetching...</div>
-        <button class="btn-refresh" id="btn-refresh" title="Refresh data">↻ Refresh</button>
+        <button class="btn-refresh" id="btn-refresh" title="Refresh data"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
       </div>
     </header>
 
@@ -90,7 +99,7 @@
       </div>
       <div class="health-grid" id="health-grid">
         <div class="health-card skeleton" data-service="jenkins">
-          <div class="health-icon">🔨</div>
+          <div class="health-icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jenkins/jenkins-original.svg" alt="Jenkins" width="28" height="28" /></div>
           <div class="health-info">
             <span class="health-name">Jenkins</span>
             <span class="health-status">—</span>
@@ -98,7 +107,7 @@
           <div class="health-indicator"></div>
         </div>
         <div class="health-card skeleton" data-service="gitea">
-          <div class="health-icon">🌿</div>
+          <div class="health-icon"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/gitea.svg" alt="Gitea" width="28" height="28" class="service-logo" /></div>
           <div class="health-info">
             <span class="health-name">Gitea</span>
             <span class="health-status">—</span>
@@ -106,7 +115,7 @@
           <div class="health-indicator"></div>
         </div>
         <div class="health-card skeleton" data-service="registry">
-          <div class="health-icon">🐳</div>
+          <div class="health-icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" alt="Docker" width="28" height="28" /></div>
           <div class="health-info">
             <span class="health-name">Registry</span>
             <span class="health-status">—</span>
@@ -114,7 +123,7 @@
           <div class="health-indicator"></div>
         </div>
         <div class="health-card skeleton" data-service="prometheus">
-          <div class="health-icon">📊</div>
+          <div class="health-icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/prometheus/prometheus-original.svg" alt="Prometheus" width="28" height="28" /></div>
           <div class="health-info">
             <span class="health-name">Prometheus</span>
             <span class="health-status">—</span>
@@ -129,7 +138,7 @@
       </div>
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card" id="stat-builds">
-          <div class="stat-icon builds">🔨</div>
+          <div class="stat-icon builds"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jenkins/jenkins-original.svg" alt="Builds" width="26" height="26" /></div>
           <div class="stat-body">
             <div class="stat-value" id="stat-total-builds">—</div>
             <div class="stat-label">Total Builds</div>
@@ -137,7 +146,7 @@
           </div>
         </div>
         <div class="stat-card" id="stat-deploys">
-          <div class="stat-icon deploys">🚀</div>
+          <div class="stat-icon deploys"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg></div>
           <div class="stat-body">
             <div class="stat-value" id="stat-total-deploys">—</div>
             <div class="stat-label">Deployments</div>
@@ -145,7 +154,7 @@
           </div>
         </div>
         <div class="stat-card" id="stat-repos">
-          <div class="stat-icon repos">📁</div>
+          <div class="stat-icon repos"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/gitea.svg" alt="Repos" width="26" height="26" class="service-logo" /></div>
           <div class="stat-body">
             <div class="stat-value" id="stat-repos-count">—</div>
             <div class="stat-label">Repositories</div>
@@ -153,7 +162,7 @@
           </div>
         </div>
         <div class="stat-card" id="stat-images">
-          <div class="stat-icon images">🐳</div>
+          <div class="stat-icon images"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" alt="Docker" width="26" height="26" /></div>
           <div class="stat-body">
             <div class="stat-value" id="stat-images-count">—</div>
             <div class="stat-label">Docker Images</div>
@@ -161,7 +170,7 @@
           </div>
         </div>
         <div class="stat-card" id="stat-security">
-          <div class="stat-icon security">🔒</div>
+          <div class="stat-icon security"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           <div class="stat-body">
             <div class="stat-value" id="stat-security-count">—</div>
             <div class="stat-label">Security Issues</div>

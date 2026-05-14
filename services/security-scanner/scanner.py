@@ -196,12 +196,11 @@ def check_image_vulnerabilities(images: list) -> list:
 def report_findings(findings: list) -> None:
     if not findings:
         log.info("✅ No security findings — clean scan.")
-        return
-
-    log.warning("🔴 Found %d security issue(s)!", len(findings))
-    for f in findings:
-        log.warning("  [%s] %s — %s", f.get("severity"), f.get("type"),
-                    f.get("label") or f.get("reason") or f.get("image"))
+    else:
+        log.warning("🔴 Found %d security issue(s)!", len(findings))
+        for f in findings:
+            log.warning("  [%s] %s — %s", f.get("severity"), f.get("type"),
+                        f.get("label") or f.get("reason") or f.get("image"))
 
     try:
         requests.post(
