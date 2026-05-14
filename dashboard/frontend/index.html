@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ForgeOps — Offline-First DevOps Monitoring Dashboard. Real-time visibility into your local CI/CD, deployments, and infrastructure." />
+  <title>ForgeOps — DevOps Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚙️</div>
+      <div class="brand-text">
+        <span class="brand-name">ForgeOps</span>
+        <span class="brand-tagline">DevOps Command Center</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="overview" id="nav-overview">
+        <span class="nav-icon">🏠</span>
+        <span>Overview</span>
+      </a>
+      <a class="nav-item" data-page="builds" id="nav-builds">
+        <span class="nav-icon">🔨</span>
+        <span>Builds</span>
+      </a>
+      <a class="nav-item" data-page="deployments" id="nav-deployments">
+        <span class="nav-icon">🚀</span>
+        <span>Deployments</span>
+      </a>
+      <a class="nav-item" data-page="repositories" id="nav-repositories">
+        <span class="nav-icon">📁</span>
+        <span>Repositories</span>
+      </a>
+      <a class="nav-item" data-page="registry" id="nav-registry">
+        <span class="nav-icon">🐳</span>
+        <span>Registry</span>
+      </a>
+      <a class="nav-item" data-page="monitoring" id="nav-monitoring">
+        <span class="nav-icon">📊</span>
+        <span>Monitoring</span>
+      </a>
+      <a class="nav-item" data-page="security" id="nav-security">
+        <span class="nav-icon">🔒</span>
+        <span>Security</span>
+      </a>
+      <a class="nav-item" data-page="logs" id="nav-logs">
+        <span class="nav-icon">📋</span>
+        <span>Logs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sync-status" id="sync-status">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">Checking...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">System Overview</h1>
+        <span class="page-subtitle" id="page-subtitle">Real-time platform health</span>
+      </div>
+      <div class="topbar-right">
+        <div class="last-updated" id="last-updated">Fetching...</div>
+        <button class="btn-refresh" id="btn-refresh" title="Refresh data">↻ Refresh</button>
+      </div>
+    </header>
+
+    <!-- ── OVERVIEW PAGE ──────────────────────────────────── -->
+    <section class="page active" id="page-overview">
+
+      <!-- Service Health Grid -->
+      <div class="section-header">
+        <h2>Service Health</h2>
+        <span class="section-badge" id="health-badge">Loading...</span>
+      </div>
+      <div class="health-grid" id="health-grid">
+        <div class="health-card skeleton" data-service="jenkins">
+          <div class="health-icon">🔨</div>
+          <div class="health-info">
+            <span class="health-name">Jenkins</span>
+            <span class="health-status">—</span>
+          </div>
+          <div class="health-indicator"></div>
+        </div>
+        <div class="health-card skeleton" data-service="gitea">
+          <div class="health-icon">🌿</div>
+          <div class="health-info">
+            <span class="health-name">Gitea</span>
+            <span class="health-status">—</span>
+          </div>
+          <div class="health-indicator"></div>
+        </div>
+        <div class="health-card skeleton" data-service="registry">
+          <div class="health-icon">🐳</div>
+          <div class="health-info">
+            <span class="health-name">Registry</span>
+            <span class="health-status">—</span>
+          </div>
+          <div class="health-indicator"></div>
+        </div>
+        <div class="health-card skeleton" data-service="prometheus">
+          <div class="health-icon">📊</div>
+          <div class="health-info">
+            <span class="health-name">Prometheus</span>
+            <span class="health-status">—</span>
+          </div>
+          <div class="health-indicator"></div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="section-header">
+        <h2>Platform Statistics</h2>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card" id="stat-builds">
+          <div class="stat-icon builds">🔨</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-total-builds">—</div>
+            <div class="stat-label">Total Builds</div>
+            <div class="stat-sub" id="stat-success-rate">—% success rate</div>
+          </div>
+        </div>
+        <div class="stat-card" id="stat-deploys">
+          <div class="stat-icon deploys">🚀</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-total-deploys">—</div>
+            <div class="stat-label">Deployments</div>
+            <div class="stat-sub" id="stat-failed-deploys">— failed</div>
+          </div>
+        </div>
+        <div class="stat-card" id="stat-repos">
+          <div class="stat-icon repos">📁</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-repos-count">—</div>
+            <div class="stat-label">Repositories</div>
+            <div class="stat-sub">Local Gitea repos</div>
+          </div>
+        </div>
+        <div class="stat-card" id="stat-images">
+          <div class="stat-icon images">🐳</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-images-count">—</div>
+            <div class="stat-label">Docker Images</div>
+            <div class="stat-sub">In local registry</div>
+          </div>
+        </div>
+        <div class="stat-card" id="stat-security">
+          <div class="stat-icon security">🔒</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-security-count">—</div>
+            <div class="stat-label">Security Issues</div>
+            <div class="stat-sub">High/Critical severity</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="section-header">
+        <h2>Recent Activity</h2>
+      </div>
+      <div class="activity-feed" id="activity-feed">
+        <div class="activity-loading">Loading activity...</div>
+      </div>
+    </section>
+
+    <!-- ── BUILDS PAGE ────────────────────────────────────── -->
+    <section class="page" id="page-builds">
+      <div class="table-container">
+        <div class="section-header">
+          <h2>Build History</h2>
+          <a class="btn-external" href="/jenkins/" target="_blank">Open Jenkins ↗</a>
+        </div>
+        <table class="data-table" id="builds-table">
+          <thead>
+            <tr>
+              <th>Job</th>
+              <th>Build #</th>
+              <th>Result</th>
+              <th>Duration</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="builds-tbody">
+            <tr><td colspan="5" class="table-loading">Loading builds...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── DEPLOYMENTS PAGE ──────────────────────────────── -->
+    <section class="page" id="page-deployments">
+      <div class="table-container">
+        <div class="section-header">
+          <h2>Deployment History</h2>
+        </div>
+        <table class="data-table" id="deployments-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Image</th>
+              <th>Status</th>
+              <th>Previous Image</th>
+              <th>Started At</th>
+            </tr>
+          </thead>
+          <tbody id="deployments-tbody">
+            <tr><td colspan="5" class="table-loading">Loading deployments...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── REPOSITORIES PAGE ─────────────────────────────── -->
+    <section class="page" id="page-repositories">
+      <div class="section-header">
+        <h2>Git Repositories</h2>
+        <a class="btn-external" href="http://localhost/gitea/" target="_blank">Open Gitea ↗</a>
+      </div>
+      <div class="repo-grid" id="repo-grid">
+        <div class="repo-loading">Loading repositories...</div>
+      </div>
+    </section>
+
+    <!-- ── REGISTRY PAGE ─────────────────────────────────── -->
+    <section class="page" id="page-registry">
+      <div class="section-header">
+        <h2>Docker Registry</h2>
+        <span class="section-badge" id="registry-count-badge">Loading...</span>
+      </div>
+      <div class="registry-grid" id="registry-grid">
+        <div class="registry-loading">Loading registry...</div>
+      </div>
+    </section>
+
+    <!-- ── MONITORING PAGE ───────────────────────────────── -->
+    <section class="page" id="page-monitoring">
+      <div class="section-header">
+        <h2>Grafana Monitoring</h2>
+        <a class="btn-external" href="/grafana/" target="_blank">Open Grafana ↗</a>
+      </div>
+      <div class="iframe-container" id="grafana-container">
+        <iframe src="/grafana/d-solo/system-overview/system-overview?orgId=1&panelId=2" width="100%" height="100%" frameborder="0" id="grafana-iframe"></iframe>
+      </div>
+    </section>
+
+    <!-- ── SECURITY PAGE ─────────────────────────────────── -->
+    <section class="page" id="page-security">
+      <div class="section-header">
+        <h2>Security Findings</h2>
+        <span class="section-badge danger" id="security-count-badge">Loading...</span>
+      </div>
+      <div class="findings-list" id="findings-list">
+        <div class="findings-loading">Loading security scan results...</div>
+      </div>
+    </section>
+
+    <!-- ── LOGS PAGE ─────────────────────────────────────── -->
+    <section class="page" id="page-logs">
+      <div class="section-header">
+        <h2>Event Log Stream</h2>
+      </div>
+      <div class="log-terminal" id="log-terminal">
+        <div class="log-line">Fetching log stream...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

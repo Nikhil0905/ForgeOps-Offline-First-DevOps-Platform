@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = "${env.REGISTRY_HOST ?: 'registry:5000'}"
+        APP_NAME = "node-app"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        NODE_ENV  = "production"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "📥 Checking out source..."
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "📦 Installing npm dependencies (offline cache)..."
+                sh """
+                    npm ci --prefer-offline --cache /var/jenkins_home/.npm-cache
+                """
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "🧪 Running tests..."
+                sh "npm test"
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "🐳 Building Docker image..."
+                sh """
+                    docker build \
+                        -t ${REGISTRY}/${APP_NAME}:${IMAGE_TAG} \
+                        -t ${REGISTRY}/${APP_NAME}:latest .
+                """
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                sh """
+                    docker push ${REGISTRY}/${APP_NAME}:${IMAGE_TAG}
+                    docker push ${REGISTRY}/${APP_NAME}:latest
+                """
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh """
+                    python3 /opt/forgeops/deploy.py \
+                        ${APP_NAME} ${APP_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            sh """
+                curl -sf -X POST http://dashboard-backend:5050/api/builds/webhook \
+                    -H 'Content-Type: application/json' \
+                    -d '{"job":"${JOB_NAME}","build_number":${BUILD_NUMBER},"result":"${currentBuild.result}","duration_ms":${currentBuild.duration}}' || true
+            """
+            cleanWs()
+        }
+    }
+}

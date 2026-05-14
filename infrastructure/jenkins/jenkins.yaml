@@ -1,0 +1,121 @@
+---
+# ============================================================
+# Jenkins Configuration as Code (JCasC)
+# Auto-configures Jenkins on first boot — no setup wizard
+# ============================================================
+
+jenkins:
+  systemMessage: |
+    🔧 ForgeOps Jenkins CI/CD Engine
+    Offline-First DevOps Platform — Fully Automated
+
+  numExecutors: 4
+  mode: NORMAL
+  scmCheckoutRetryCount: 2
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_USER}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+          properties:
+            - timezone:
+                timeZoneName: "Asia/Kolkata"
+
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            description: "Jenkins administrators"
+            permissions:
+              - "Overall/Administer"
+            entries:
+              - user: "${JENKINS_ADMIN_USER}"
+          - name: "developer"
+            description: "Developers — can build and read"
+            permissions:
+              - "Overall/Read"
+              - "Job/Build"
+              - "Job/Read"
+              - "Job/Workspace"
+              - "Run/Replay"
+
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: REGISTRY_HOST
+            value: "${REGISTRY_HOST}"
+          - key: NEXUS_URL
+            value: "http://nexus:8081"
+          - key: GITEA_URL
+            value: "${GITEA_URL}"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "gitea-credentials"
+              username: "${GITEA_ADMIN_USER}"
+              password: "${GITEA_ADMIN_PASSWORD}"
+              description: "Gitea admin credentials"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "registry-credentials"
+              username: "forgeops"
+              password: "forgeops-registry"
+              description: "Local Docker Registry credentials"
+
+tool:
+  maven:
+    installations:
+      - name: "Maven-3.9"
+        home: "/usr/share/maven"
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+
+unclassified:
+  location:
+    url: "http://localhost/jenkins/"
+    adminAddress: "admin@forgeops.local"
+
+  giteaServers:
+    servers:
+      - displayName: "ForgeOps Gitea"
+        serverUrl: "${GITEA_URL}"
+        credentialsId: "gitea-credentials"
+
+  prometheusConfiguration:
+    defaultNamespace: "forgeops_jenkins"
+    collectCodeCoverage: true
+    countAbortedBuilds: true
+    countFailedBuilds: true
+    collectDiskUsage: true
+
+jobs:
+  - script: |
+      pipelineJob('ForgeOps-Seed') {
+        description('Seed job — triggers all project pipelines')
+        definition {
+          cps {
+            script("""
+              pipeline {
+                agent any
+                stages {
+                  stage('Seed') {
+                    steps {
+                      echo 'ForgeOps pipeline seed job running...'
+                    }
+                  }
+                }
+              }
+            """)
+            sandbox(true)
+          }
+        }
+      }

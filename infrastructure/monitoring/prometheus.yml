@@ -1,0 +1,44 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'forgeops'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Jenkins metrics (via Prometheus plugin)
+  - job_name: 'jenkins'
+    metrics_path: '/jenkins/prometheus'
+    static_configs:
+      - targets: ['jenkins:8080']
+    basic_auth:
+      username: 'admin'
+      password: 'ForgeOps@Jenkins2025'
+
+  # Dashboard backend metrics
+  - job_name: 'forgeops-dashboard'
+    static_configs:
+      - targets: ['dashboard-backend:5050']
+    metrics_path: '/metrics'
+
+  # Node Exporter (if deployed)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Docker registry metrics
+  - job_name: 'registry'
+    static_configs:
+      - targets: ['registry:5001']
+    metrics_path: '/metrics'

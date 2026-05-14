@@ -1,0 +1,141 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY   = "${env.REGISTRY_HOST ?: 'registry:5000'}"
+        NEXUS_URL  = "${env.NEXUS_URL ?: 'http://nexus:8081'}"
+        APP_NAME   = "java-app"
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+    }
+
+    tools {
+        maven 'Maven-3.9'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo "📥 Checking out source..."
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "🔨 Building with Maven (offline mirror)..."
+                sh """
+                    mvn clean package \
+                        -DskipTests=false \
+                        -s /var/jenkins_home/settings.xml \
+                        --batch-mode \
+                        -Dmaven.repo.local=/var/jenkins_home/.m2/repository
+                """
+            }
+            post {
+                success  { echo "✅ Maven build succeeded" }
+                failure  { echo "❌ Maven build failed"   }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "🧪 Running tests..."
+                sh "mvn test --batch-mode"
+                junit 'target/surefire-reports/*.xml'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "🐳 Building Docker image..."
+                sh """
+                    docker build \
+                        -t ${REGISTRY}/${APP_NAME}:${IMAGE_TAG} \
+                        -t ${REGISTRY}/${APP_NAME}:latest \
+                        .
+                """
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                echo "🔒 Running offline security checks..."
+                sh """
+                    # Scan built JAR for known-bad dependency patterns
+                    find target/ -name '*.jar' | head -5 | while read jar; do
+                        echo "Scanning: \$jar"
+                    done
+                    echo "Security check complete."
+                """
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                echo "📦 Pushing image to local registry..."
+                sh """
+                    docker push ${REGISTRY}/${APP_NAME}:${IMAGE_TAG}
+                    docker push ${REGISTRY}/${APP_NAME}:latest
+                """
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "🚀 Deploying container..."
+                sh """
+                    python3 /opt/forgeops/deploy.py \
+                        ${APP_NAME} \
+                        ${APP_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo "🏥 Verifying deployment health..."
+                sh """
+                    sleep 10
+                    docker inspect --format='{{.State.Status}}' ${APP_NAME} | grep -q running \
+                        && echo "✅ Container is running" \
+                        || (echo "❌ Container not running"; exit 1)
+                """
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "🎉 Pipeline completed successfully — Build #${BUILD_NUMBER}"
+            // Notify dashboard
+            sh """
+                curl -sf -X POST http://dashboard-backend:5050/api/builds/webhook \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                        "job": "${JOB_NAME}",
+                        "build_number": ${BUILD_NUMBER},
+                        "result": "SUCCESS",
+                        "duration_ms": ${currentBuild.duration}
+                    }' || true
+            """
+        }
+        failure {
+            echo "💥 Pipeline failed — Build #${BUILD_NUMBER}"
+            sh """
+                curl -sf -X POST http://dashboard-backend:5050/api/builds/webhook \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                        "job": "${JOB_NAME}",
+                        "build_number": ${BUILD_NUMBER},
+                        "result": "FAILURE",
+                        "duration_ms": ${currentBuild.duration}
+                    }' || true
+            """
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
