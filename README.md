@@ -62,6 +62,34 @@ When internet connectivity is detected, the **Sync Engine** automatically pushes
 
 ---
 
+## 🔐 Zero-Trust Hardened Security Architecture
+
+To protect internal DevOps workflows in highly secure zones, ForgeOps implements a strict **zero-trust local loopback architecture**:
+
+* **Inner Service Isolation**: Gitea, Jenkins, Nexus, Registry, Prometheus, Grafana, and our custom APIs bind strictly to `127.0.0.1` on the host. They are entirely unexposed to external networks.
+* **Unified Secure Gateway**: Nginx serves as the single TLS/SSL-encrypted gatekeeper on ports `80` and `443`.
+* **Basic Authentication**: All external page views, API requests, and webhooks are authorized via cryptographic HTTP Basic Auth challenge credentials.
+
+```
+[Developer / Client Host]
+         │
+ (HTTP/HTTPS Port 80/443 + Gateway Basic Auth)
+         ▼
+ ┌───────────────────────┐
+ │ Nginx Reverse Proxy   │ (Edge TLS Termination & Gatekeeper)
+ └──────────┬────────────┘
+            │
+  (Internal Container Net)
+            ├──────────────────────┬──────────────────────┬──────────────────────┐
+            ▼                      ▼                      ▼                      ▼
+    ┌──────────────┐       ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+    │ Dashboard UI │       │  Gitea Git   │       │  Jenkins CI  │       │  Grafana     │
+    │  (Port 8888) │       │  (Port 3000) │       │  (Port 8080) │       │  (Port 3001) │
+    └──────────────┘       └──────────────┘       └──────────────┘       └──────────────┘
+```
+
+---
+
 ## 💡 Use Cases
 
 | Scenario | Description |
@@ -74,64 +102,28 @@ When internet connectivity is detected, the **Sync Engine** automatically pushes
 
 ---
 
-## 🏗️ Architecture
+## 📦 Services & Host Port Bindings
 
-```
-┌──────────────┐     git push      ┌──────────────┐    webhook     ┌──────────────────┐
-│  Developer   │ ──────────────▶   │  Gitea :3000  │ ────────────▶ │  Jenkins :8080   │
-│              │                   │  (Git Server)  │               │  (CI/CD Engine)  │
-└──────────────┘                   └──────────────┘               └────────┬─────────┘
-                                                                           │
-                     ┌─────────────────────────────────────────────────────┤
-                     │                    │                    │           │
-                     ▼                    ▼                    ▼           ▼
-              ┌──────────────┐   ┌──────────────┐   ┌──────────────┐ ┌─────────────┐
-              │ Nexus :8081  │   │ Docker Build  │   │  Security    │ │ Deployment  │
-              │ Maven Mirror │   │               │   │  Scanner     │ │ Engine      │
-              └──────────────┘   └──────┬───────┘   └──────────────┘ └──────┬──────┘
-                                        │                                    │
-                                        ▼                                    ▼
-                                ┌──────────────┐                    ┌──────────────┐
-                                │ Registry     │                    │ Live App     │
-                                │ :5000        │                    │ Container    │
-                                └──────────────┘                    └──────────────┘
-                                        │
-              ┌─────────────────────────┤─────────────────────────────┐
-              ▼                         ▼                             ▼
-      ┌──────────────┐         ┌──────────────┐              ┌──────────────┐
-      │ Dashboard    │         │ Prometheus   │              │ Sync Engine  │
-      │ :8888        │         │ :9090        │              │ → GitHub     │
-      └──────────────┘         └──────┬───────┘              └──────────────┘
-                                      ▼
-                               ┌──────────────┐
-                               │ Grafana      │
-                               │ :3001        │
-                               └──────────────┘
-```
+All internal backends bind strictly to local host loopback interface (`127.0.0.1`) to ensure absolute security and prevent unauthorized bypassing of authentication.
 
----
-
-## 📦 Services & Ports
-
-| Container | Image | Port(s) | Role |
-|-----------|-------|---------|------|
-| `forgeops-nginx` | nginx:1.25-alpine | 80, 443 | Reverse proxy & router |
-| `forgeops-gitea` | gitea/gitea:1.21 | 3000 | Local Git server |
-| `forgeops-jenkins` | custom (jenkins/lts) | 8080, 50000 | CI/CD engine |
-| `forgeops-registry` | registry:2 | 5000 | Docker image store |
-| `forgeops-nexus` | sonatype/nexus3 | 8081 | Maven dependency mirror |
-| `forgeops-prometheus` | prom/prometheus | 9090 | Metrics collection |
-| `forgeops-grafana` | grafana/grafana | 3001 | Metrics visualisation |
-| `forgeops-dashboard-api` | custom (python:3.11) | 5050 | Flask REST API |
-| `forgeops-dashboard-ui` | custom (nginx) | 8888 | SPA monitoring dashboard |
-| `forgeops-sync-engine` | custom (python:3.11) | — | Internet-aware GitHub sync |
-| `forgeops-backup-engine` | custom (alpine) | — | Scheduled backups |
-| `forgeops-deployment-engine` | custom (python:3.11) | — | Health-check deployer |
-| `forgeops-security-scanner` | custom (python:3.11) | — | Secrets & image scanner |
+| Container | Image | Local Host Port | Router Gateway URL Path | Role |
+|-----------|-------|-----------------|-------------------------|------|
+| `forgeops-nginx` | `nginx:1.25-alpine` | `0.0.0.0:80`, `443` | `/` | HTTP/HTTPS Gateway Reverse Proxy |
+| `forgeops-gitea` | `gitea/gitea:1.21` | `127.0.0.1:2222` (SSH) | `/gitea/` | Secure Local Git server |
+| `forgeops-jenkins` | custom (jenkins/lts) | `127.0.0.1:8080` (HTTP) | `/jenkins/` | CI/CD build engine |
+| `forgeops-registry` | `registry:2` | `127.0.0.1:5000` | `/registry/` | Docker image container registry |
+| `forgeops-nexus` | `sonatype/nexus3` | `127.0.0.1:8081` | `/nexus/` | Maven dependency mirror registry |
+| `forgeops-prometheus` | `prom/prometheus` | `127.0.0.1:9090` | `/prometheus/` | System resource health collector |
+| `forgeops-grafana` | `grafana/grafana` | `127.0.0.1:3001` | `/grafana/` | Analytical data dashboard board |
+| `forgeops-dashboard-api`| custom (python:3.11)| `127.0.0.1:5050` | `/api/` | Flask core backend REST API |
+| `forgeops-dashboard-ui` | custom (nginx) | `127.0.0.1:8888` | `/` | Command center frontend UI |
+| `forgeops-sync-engine` | custom (python:3.11)| — (Internal Network) | — | Multi-branch auto-sync manager |
 
 ---
 
 ## 🚀 Quick Start
+
+Follow these simple commands to provision, secure, and bootstrap the ForgeOps environment:
 
 ```bash
 # 1. Clone the repository
@@ -142,28 +134,39 @@ cd ForgeOps-Offline-First-DevOps-Platform
 cp .env.example .env
 nano .env    # Update credentials and GitHub PAT
 
-# 3. Run the installer
-bash scripts/install.sh
+# 3. Generate secure TLS certificates and Gateway passwords
+bash scripts/harden-security.sh
 
-# 4. Open the dashboard
-# http://localhost
+# 4. Spin up the orchestrator containers
+docker compose up -d
+
+# 5. Bootstrap local Sonatype Nexus caching mirrors
+bash services/dependency-mirror/setup-nexus.sh
 ```
 
 ---
 
-## 🌐 Service URLs
+## 🔐 Credentials Registry
 
-| Service | URL | Default Credentials |
-|---------|-----|---------------------|
-| **Dashboard** | http://localhost | — |
-| **Gitea** | http://localhost/gitea/ | `forgeops` / `ForgeOps@2025` |
-| **Jenkins** | http://localhost/jenkins/ | `admin` / `ForgeOps@Jenkins2025` |
-| **Registry** | http://localhost:5000 | — |
-| **Nexus** | http://localhost:8081 | `admin` / `ForgeOps@Nexus2025` |
-| **Prometheus** | http://localhost:9090 | — |
-| **Grafana** | http://localhost/grafana/ | `admin` / `ForgeOps@Grafana2025` |
+Use the credentials logged below to log into the platform.
 
-> ⚠️ Change all default passwords in `.env` before production use.
+### 🛡️ Outer Gateway Security (HTTP Basic Auth)
+All page visits to the Dashboard, Gitea, Jenkins, and Grafana require outer authentication on load:
+* **Username**: `admin`
+* **Password**: `ForgeOps@2025`
+
+### 💻 Internal Services Login
+Once through the secure edge gatekeeper, access individual panels using their local logins:
+
+| Platform Component | Default Username | Default Password | URL Endpoint Path |
+|--------------------|------------------|------------------|-------------------|
+| **Command Dashboard**| — *(Gateway Only)*| — *(Gateway Only)*| `https://localhost/` |
+| **Gitea Git Server** | `forgeops` | `ForgeOps@2025` | `https://localhost/gitea/` |
+| **Jenkins CI Engine**| `admin` | `ForgeOps@Jenkins2025`| `https://localhost/jenkins/` |
+| **Nexus Mirror**     | `admin` | `ForgeOps@Nexus2025`  | `https://localhost/nexus/` |
+| **Grafana Analytics**| `admin` | `ForgeOps@Grafana2025`| `https://localhost/grafana/` |
+
+> ⚠️ Always change passwords in `.env` and rerun `bash scripts/harden-security.sh` prior to high-security production deployments.
 
 ---
 
@@ -192,18 +195,21 @@ Local Gitea                              GitHub (ForgeOps-Org-repo)
 
 ```
 forgeops/
-├── docker-compose.yml              # Full orchestration (13 services)
+├── docker-compose.yml              # Full orchestration (13 services, zero-trust)
 ├── .env                            # Credentials & configuration
 ├── .env.example                    # Template for new deployments
 │
 ├── infrastructure/
-│   ├── nginx/nginx.conf            # Reverse proxy routing
+│   ├── nginx/
+│   │   ├── nginx.conf              # Secure edge proxy & gateway rules
+│   │   ├── certs/                  # Auto-generated SSL/TLS keys
+│   │   └── .htpasswd               # Salty bcrypt user gateway database
 │   ├── registry/config.yml         # Docker registry v2 config
 │   ├── jenkins/
 │   │   ├── Dockerfile              # Jenkins + Docker CLI + Maven
-│   │   ├── jenkins.yaml            # JCasC auto-configuration
+│   │   ├── jenkins.yaml            # JCasC auto-configuration (HTTPS root url)
 │   │   └── plugins.txt             # Jenkins plugins
-│   ├── gitea/app.ini               # Gitea offline config (SQLite)
+│   ├── gitea/app.ini               # Gitea offline config (SQLite + HTTPS root url)
 │   └── monitoring/
 │       └── prometheus.yml          # Scrape targets
 │
@@ -225,9 +231,10 @@ forgeops/
 │
 ├── scripts/
 │   ├── install.sh                  # Full bootstrap (run once)
-│   ├── healthcheck.sh              # Verify all services
+│   ├── healthcheck.sh              # Verify all services (TLS + Auth aware)
 │   ├── sync.sh                     # Manual sync trigger
-│   └── rollback.sh                 # Emergency rollback
+│   ├── rollback.sh                 # Emergency rollback
+│   └── harden-security.sh          # Cert & htpasswd credentials generator
 │
 └── Screenshot_Visuals/             # Platform screenshots
 ```
@@ -242,6 +249,9 @@ docker compose up -d
 
 # Stop the platform
 docker compose down
+
+# Run the security hardener (regenerate certs and gateway logins)
+bash scripts/harden-security.sh
 
 # View logs for a service
 docker compose logs -f jenkins
