@@ -19,12 +19,21 @@ RUN apt-get update && apt-get install -y \
 # Install Maven
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
+# Add SSL certificates for proxy/firewall trust (Sophos)
+COPY cert-*.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 # Add jenkins user to docker group
 RUN groupadd -f docker && usermod -aG docker jenkins
 
 # Install Jenkins plugins
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+
+# Pre-configure Maven settings for the jenkins user
+RUN mkdir -p /var/jenkins_home/.m2
+COPY settings.xml /var/jenkins_home/.m2/settings.xml
+RUN chown -R jenkins:jenkins /var/jenkins_home/.m2
 
 # Install JCasC config
 ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml

@@ -33,6 +33,7 @@ services:
     volumes:
       - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./infrastructure/nginx/certs:/etc/nginx/certs:ro
+      - ./infrastructure/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
     networks:
       - forgeops-net
     depends_on:
@@ -56,7 +57,7 @@ services:
     environment:
       - USER_UID=1000
       - USER_GID=1000
-      - GITEA__server__ROOT_URL=http://localhost/gitea/
+      - GITEA__server__ROOT_URL=https://localhost/gitea/
       - GITEA__server__HTTP_PORT=3000
       - GITEA__database__DB_TYPE=sqlite3
       - GITEA__database__PATH=/data/gitea/gitea.db
@@ -103,8 +104,8 @@ services:
       - GITEA_ADMIN_USER=${GITEA_ADMIN_USER}
       - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD}
     ports:
-      - "8080:8080"
-      - "50000:50000"
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:50000:50000"
     volumes:
       - jenkins-data:/var/jenkins_home
       - ./infrastructure/jenkins/jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml:ro
@@ -133,7 +134,7 @@ services:
       - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
       - REGISTRY_HTTP_ADDR=0.0.0.0:5000
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     volumes:
       - registry-data:/var/lib/registry
       - ./infrastructure/registry/config.yml:/etc/docker/registry/config.yml:ro
@@ -156,7 +157,7 @@ services:
     environment:
       - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1g -XX:MaxDirectMemorySize=512m
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     volumes:
       - nexus-data:/nexus-data
     networks:
@@ -182,7 +183,7 @@ services:
       - "--storage.tsdb.retention.time=30d"
       - "--web.enable-lifecycle"
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -211,7 +212,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./infrastructure/monitoring/grafana:/etc/grafana/provisioning:ro
@@ -240,7 +241,7 @@ services:
       - REGISTRY_URL=http://registry:5000
       - PROMETHEUS_URL=http://prometheus:9090
     ports:
-      - "5050:5050"
+      - "127.0.0.1:5050:5050"
     volumes:
       - dashboard-db:/data
       - ./services/sync-engine/queue.json:/data/queue.json:ro
@@ -266,7 +267,7 @@ services:
     container_name: forgeops-dashboard-ui
     restart: unless-stopped
     ports:
-      - "8888:80"
+      - "127.0.0.1:8888:80"
     volumes:
       - ./dashboard/frontend:/usr/share/nginx/html:ro
     networks:

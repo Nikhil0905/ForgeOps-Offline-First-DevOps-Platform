@@ -81,7 +81,7 @@ tool:
 
 unclassified:
   location:
-    url: "http://localhost/jenkins/"
+    url: "https://localhost/jenkins/"
     adminAddress: "admin@forgeops.local"
 
   giteaServers:

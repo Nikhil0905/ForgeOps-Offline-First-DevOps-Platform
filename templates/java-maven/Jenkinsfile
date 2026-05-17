@@ -27,7 +27,7 @@ pipeline {
                 sh """
                     mvn clean package \
                         -DskipTests=false \
-                        -s /var/jenkins_home/settings.xml \
+                        -s /var/jenkins_home/.m2/settings.xml \
                         --batch-mode \
                         -Dmaven.repo.local=/var/jenkins_home/.m2/repository
                 """

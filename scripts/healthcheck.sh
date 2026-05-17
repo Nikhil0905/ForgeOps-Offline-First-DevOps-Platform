@@ -15,7 +15,14 @@ warn() { echo -e "  ${YELLOW}⚠️  WARN${NC}  $*"; ((WARN++)); }
 
 check_http() {
     local name="$1" url="$2"
-    if curl -sf --connect-timeout 5 --max-time 10 "${url}" > /dev/null 2>&1 || false; then
+    local opts="-sfk --location-trusted --connect-timeout 5 --max-time 10"
+    
+    # Supply credentials for endpoints protected by basic authentication
+    if [[ "${name}" == *"Dashboard"* ]]; then
+        opts="${opts} -u admin:ForgeOps@2025"
+    fi
+    
+    if curl ${opts} "${url}" > /dev/null 2>&1; then
         ok "${name} (${url})"
     else
         fail "${name} — not responding at ${url}"
@@ -53,7 +60,7 @@ check_container "forgeops-backup-engine"
 echo ""
 echo -e "${CYAN}── HTTP Endpoints ─────────────────────────${NC}"
 check_http "Gitea"          "http://localhost/gitea/"
-check_http "Jenkins"        "http://localhost/jenkins/"
+check_http "Jenkins"        "http://localhost/jenkins/login"
 check_http "Registry"       "http://localhost:5000/v2/"
 check_http "Nexus"          "http://localhost:8081/service/rest/v1/status"
 check_http "Prometheus"     "http://localhost:9090/-/ready"

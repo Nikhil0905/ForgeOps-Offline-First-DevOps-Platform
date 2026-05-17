@@ -12,7 +12,7 @@
 | **Repo**       | `github.com/Nikhil0905/ForgeOps-Offline-First-DevOps-Platform` |
 | **Org Repo**   | `github.com/Nikhil0905/ForgeOps-Org-repo`               |
 | **Created**    | 2026-05-07                                              |
-| **Status**     | ✅ Complete                                              |
+| **Status**     | Secured & Complete (Zero-Trust Hardened)             |
 | **Purpose**    | Self-hosted offline-first DevOps for air-gapped/low-connectivity environments |
 
 ---
@@ -20,49 +20,48 @@
 ## 🏗️ Architecture Summary
 
 ```
-[Developer] → git push → [Gitea :3000] → webhook → [Jenkins :8080]
-                                                         │
-                         ┌───────────────────────────────┤
-                         ▼               ▼               ▼
-                  [Nexus :8081]   [Docker Build]  [Security Scanner]
-                  Maven Mirror                           │
-                         │               │               │
-                         └───────────────▼───────────────┘
-                                [Local Registry :5000]
-                                         │
-                                [Deployment Engine]
-                                 ┌───────┴──────┐
-                              healthy?        failed?
-                                 │               │
-                              [Keep]         [Rollback]
-                                         │
-                              [Dashboard :8888]
-                              [Prometheus :9090]
-                              [Grafana :3001]
-                                         │
-                              [Sync Engine → GitHub]
-                              (projects/* branches)
+[Developer/Client]
+       │
+ (Port 80/443 with TLS & Basic Auth)
+       ▼
+ [Nginx Reverse Proxy]
+       │
+ (Internal Route: forgeops-net Bridge)
+       ├─────────────────────────────────┬─────────────────────────────────┐
+       ▼                                 ▼                                 ▼
+[Dashboard UI]                   [Dashboard API]                    [Gitea Portal]
+(127.0.0.1:8888)                 (127.0.0.1:5050)                  (127.0.0.1:3000)
+                                         │                                 │
+                                         ▼                                 ▼
+                                  [SQLite Database]                 [Jenkins Engine]
+                                  (forgeops.db)                    (127.0.0.1:8080)
+                                                                           │
+                                                                   [Build Runners]
+                                                                           ├───────────────┐
+                                                                           ▼               ▼
+                                                                    [Nexus Proxy]   [Docker Registry]
+                                                                   (127.0.0.1:8081) (127.0.0.1:5000)
 ```
 
 ---
 
 ## 📦 Services & Ports
 
-| Container                    | Image                    | Port(s)       | Role                        |
-|------------------------------|--------------------------|---------------|-----------------------------
-| `forgeops-nginx`             | nginx:1.25-alpine        | 80, 443       | Reverse proxy / router      |
-| `forgeops-gitea`             | gitea/gitea:1.21         | 3000, 2222    | Local Git server            |
-| `forgeops-jenkins`           | custom (jenkins/lts)     | 8080, 50000   | CI/CD engine                |
-| `forgeops-registry`          | registry:2               | 5000          | Docker image store          |
-| `forgeops-nexus`             | sonatype/nexus3          | 8081          | Maven dependency mirror     |
-| `forgeops-prometheus`        | prom/prometheus          | 9090          | Metrics collection          |
-| `forgeops-grafana`           | grafana/grafana          | 3001          | Metrics visualisation       |
-| `forgeops-dashboard-api`     | custom (python:3.11)     | 5050          | Flask REST API              |
-| `forgeops-dashboard-ui`      | custom (nginx)           | 8888          | SPA monitoring dashboard    |
-| `forgeops-sync-engine`       | custom (python:3.11)     | —             | Internet-aware GitHub sync  |
-| `forgeops-backup-engine`     | custom (alpine)          | —             | Scheduled backups           |
-| `forgeops-deployment-engine` | custom (python:3.11)     | —             | Health-check deployer       |
-| `forgeops-security-scanner`  | custom (python:3.11)     | —             | Secrets + image scanner     |
+| Container                    | Image                    | Bound Host Port(s)   | Role                        |
+|------------------------------|--------------------------|----------------------|-----------------------------|
+| `forgeops-nginx`             | nginx:1.25-alpine        | `0.0.0.0:80`, `443`  | HTTPS SSL/TLS Edge Proxy    |
+| `forgeops-gitea`             | gitea/gitea:1.21         | `127.0.0.1:2222`     | Local Git SSH host          |
+| `forgeops-jenkins`           | custom (jenkins/lts)     | `127.0.0.1:8080`     | CI/CD pipeline engine       |
+| `forgeops-registry`          | registry:2               | `127.0.0.1:5000`     | Container image storage     |
+| `forgeops-nexus`             | sonatype/nexus3          | `127.0.0.1:8081`     | Cached Maven mirrors        |
+| `forgeops-prometheus`        | prom/prometheus          | `127.0.0.1:9090`     | System health metrics       |
+| `forgeops-grafana`           | grafana/grafana          | `127.0.0.1:3001`     | Dynamic analytical panels   |
+| `forgeops-dashboard-api`     | custom (python:3.11)     | `127.0.0.1:5050`     | Flask dashboard backend API |
+| `forgeops-dashboard-ui`      | custom (nginx)           | `127.0.0.1:8888`     | SPA responsive user portal  |
+| `forgeops-sync-engine`       | custom (python:3.11)     | — (Internal only)    | GitHub smart replication    |
+| `forgeops-backup-engine`     | custom (alpine)          | — (Internal only)    | Scheduled system archives   |
+| `forgeops-deployment-engine` | custom (python:3.11)     | — (Internal only)    | Rollback-aware runner       |
+| `forgeops-security-scanner`  | custom (python:3.11)     | — (Internal only)    | Local credential scanner    |
 
 ---
 
@@ -72,18 +71,21 @@
 forgeops/
 ├── context.md                          ← YOU ARE HERE
 ├── README.md                           ← User-facing documentation (with screenshots)
-├── docker-compose.yml                  ← Full orchestration (13 services)
+├── docker-compose.yml                  ← Full orchestration (13 services, loopback bound)
 ├── .env                                ← All credentials & config vars
 ├── .env.example                        ← Template for new deployments
 │
 ├── infrastructure/
-│   ├── nginx/nginx.conf                ← Reverse proxy routing rules
+│   ├── nginx/
+│   │   ├── nginx.conf                  ← Dual SSL block, headers, & Basic Auth rules
+│   │   ├── certs/                      ← SSL TLS Local certificates directory
+│   │   └── .htpasswd                   ← Basic Auth password registry (salted bcrypt)
 │   ├── registry/config.yml             ← Docker registry v2 config
 │   ├── jenkins/
 │   │   ├── Dockerfile                  ← Jenkins + Docker CLI + Maven
-│   │   ├── jenkins.yaml                ← JCasC auto-configuration
+│   │   ├── jenkins.yaml                ← JCasC auto-configuration (HTTPS root url)
 │   │   └── plugins.txt                 ← Jenkins plugins to install
-│   ├── gitea/app.ini                   ← Gitea offline config (SQLite)
+│   ├── gitea/app.ini                   ← Gitea offline config (SQLite + HTTPS root url)
 │   └── monitoring/
 │       └── prometheus.yml              ← Scrape targets config
 │
@@ -125,9 +127,10 @@ forgeops/
 │
 ├── scripts/
 │   ├── install.sh                      ← Full bootstrap (run once)
-│   ├── healthcheck.sh                  ← Verify all services
+│   ├── healthcheck.sh                  ← Verify all services (TLS + Auth aware)
 │   ├── sync.sh                         ← Manual sync trigger (shows status)
-│   └── rollback.sh                     ← Emergency rollback
+│   ├── rollback.sh                     ← Emergency rollback
+│   └── harden-security.sh              ← Cert & htpasswd credentials generator
 │
 └── Screenshot_Visuals/                 ← Platform screenshots for README
     ├── ForgeOps-Dashboard.png
@@ -143,12 +146,13 @@ forgeops/
 
 ## 🔐 Default Credentials
 
-| Service   | Username  | Password                 |
-|-----------|-----------|--------------------------|
-| Gitea     | forgeops  | ForgeOps@2025            |
-| Jenkins   | admin     | ForgeOps@Jenkins2025     |
-| Nexus     | admin     | ForgeOps@Nexus2025       |
-| Grafana   | admin     | ForgeOps@Grafana2025     |
+| Service             | Username  | Password                 | Role / Access Scope               |
+|---------------------|-----------|--------------------------|-----------------------------------|
+| Nginx Reverse Proxy | admin     | ForgeOps@2025            | Outer perimeter gatekeeper auth   |
+| Gitea Portal        | forgeops  | ForgeOps@2025            | Version control user account      |
+| Jenkins Engine      | admin     | ForgeOps@Jenkins2025     | Continuous integration executor   |
+| Nexus Store         | admin     | ForgeOps@Nexus2025       | Local binary package repository   |
+| Grafana Analytics   | admin     | ForgeOps@Grafana2025     | Visual analytical reporting board |
 
 > ⚠️ Change all passwords in `.env` before production use.
 
@@ -160,7 +164,7 @@ The sync engine pushes each local Gitea repo as a **separate branch** in the sin
 
 ```
 Local Gitea repo                    GitHub (ForgeOps-Org-repo)
-─────────────────                   ────────────────────────────
+ ─────────                           ────────────────────────────
 celebration-app         →           branch: projects/celebration-app
 sample-python-app       →           branch: projects/sample-python-app
 <any-new-project>       →           branch: projects/<new-project>
@@ -202,6 +206,9 @@ docker compose up -d
 # Stop everything
 docker compose down
 
+# Run security hardening (Generates local certs and basic auth credentials)
+bash scripts/harden-security.sh
+
 # View logs for a service
 docker compose logs -f jenkins
 
@@ -229,16 +236,17 @@ docker compose up -d --no-deps dashboard-backend
 
 ## 📈 Implementation Phases
 
-| Phase | Goal                        | Status      |
-|-------|-----------------------------|-------------|
-| 1     | Infrastructure setup        | ✅ Complete |
-| 2     | CI/CD automation            | ✅ Complete |
-| 3     | Offline dependency system   | ✅ Complete |
-| 4     | Sync engine                 | ✅ Complete |
-| 5     | Monitoring dashboard        | ✅ Complete |
-| 6     | Security & recovery         | ✅ Complete |
-| 7     | UI modernization (SVG icons, branding) | ✅ Complete |
-| 8     | GitHub sync (branch-based)  | ✅ Complete |
+| Phase | Goal                                    | Status      |
+|-------|-----------------------------------------|-------------|
+| 1     | Infrastructure setup                    | ✅ Complete |
+| 2     | CI/CD automation                        | ✅ Complete |
+| 3     | Offline dependency system               | ✅ Complete |
+| 4     | Sync engine                             | ✅ Complete |
+| 5     | Monitoring dashboard                    | ✅ Complete |
+| 6     | Security & recovery                     | ✅ Complete |
+| 7     | UI modernization                        | ✅ Complete |
+| 8     | GitHub sync (branch-based)              | ✅ Complete |
+| 9     | Zero-Trust loopbacks & TLS Hardening    | ✅ Complete |
 
 ---
 
@@ -254,12 +262,13 @@ docker compose up -d --no-deps dashboard-backend
 
 ## 📝 Change Log
 
-| Date       | Change                                              | By         |
-|------------|-----------------------------------------------------|------------|
-| 2026-05-07 | Initial full platform scaffold created              | ForgeOps   |
-| 2026-05-14 | Dashboard UI modernized — SVG logos, branding       | ForgeOps   |
-| 2026-05-14 | Sync engine fixed — branch-based per-repo sync      | ForgeOps   |
-| 2026-05-14 | README moved to root with screenshot visuals        | ForgeOps   |
-| 2026-05-14 | .env.example synced, data/ removed, docs/ cleaned   | ForgeOps   |
+| Date       | Change                                                                 | By       |
+|------------|------------------------------------------------------------------------|----------|
+| 2026-05-07 | Initial full platform scaffold created                                 | ForgeOps |
+| 2026-05-14 | Dashboard UI modernized — SVG logos, branding                          | ForgeOps |
+| 2026-05-14 | Sync engine fixed — branch-based per-repo sync                        | ForgeOps |
+| 2026-05-14 | README moved to root with screenshot visuals                           | ForgeOps |
+| 2026-05-14 | .env.example synced, data/ removed, docs/ cleaned                     | ForgeOps |
+| 2026-05-17 | Security hardened: loopbacks bound, SSL/TLS reverse proxy, Basic Auth  | ForgeOps |
 
 > **How to update this file**: After making changes to any component, add a row to the Change Log and update the relevant section above. This keeps AI assistants and collaborators in sync without reading all the code.
