@@ -3,3 +3,5 @@ backup-data/
 __pycache__/
 *.pyc
 .DS_Store
+.vscode
+context.md
