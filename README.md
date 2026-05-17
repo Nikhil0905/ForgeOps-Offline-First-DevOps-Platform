@@ -62,32 +62,6 @@ When internet connectivity is detected, the **Sync Engine** automatically pushes
 
 ---
 
-## 🔐 Zero-Trust Hardened Security Architecture
-
-To protect internal DevOps workflows in highly secure zones, ForgeOps implements a strict **zero-trust local loopback architecture**:
-
-* **Inner Service Isolation**: Gitea, Jenkins, Nexus, Registry, Prometheus, Grafana, and our custom APIs bind strictly to `127.0.0.1` on the host. They are entirely unexposed to external networks.
-* **Unified Secure Gateway**: Nginx serves as the single TLS/SSL-encrypted gatekeeper on ports `80` and `443`.
-* **Basic Authentication**: All external page views, API requests, and webhooks are authorized via cryptographic HTTP Basic Auth challenge credentials.
-
-```
-[Developer / Client Host]
-         │
- (HTTP/HTTPS Port 80/443 + Gateway Basic Auth)
-         ▼
- ┌───────────────────────┐
- │ Nginx Reverse Proxy   │ (Edge TLS Termination & Gatekeeper)
- └──────────┬────────────┘
-            │
-  (Internal Container Net)
-            ├──────────────────────┬──────────────────────┬──────────────────────┐
-            ▼                      ▼                      ▼                      ▼
-    ┌──────────────┐       ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-    │ Dashboard UI │       │  Gitea Git   │       │  Jenkins CI  │       │  Grafana     │
-    │  (Port 8888) │       │  (Port 3000) │       │  (Port 8080) │       │  (Port 3001) │
-    └──────────────┘       └──────────────┘       └──────────────┘       └──────────────┘
-```
-
 ---
 
 ## 💡 Use Cases
@@ -273,27 +247,6 @@ docker compose build dashboard-backend
 docker compose up -d --no-deps dashboard-backend
 ```
 
----
-
-## 📊 Dashboard API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/system-health` | Aggregate health of all services |
-| GET | `/api/stats` | Summary stats for overview cards |
-| GET | `/api/builds` | Jenkins build history |
-| POST | `/api/builds/webhook` | Receive Jenkins build events |
-| GET | `/api/deployments` | Deployment history |
-| POST | `/api/deployments` | Record a deployment event |
-| GET | `/api/repositories` | List Gitea repositories |
-| GET | `/api/registry/images` | List local Docker images |
-| GET | `/api/security-findings` | Security scan results |
-| POST | `/api/security-findings` | Record scanner findings |
-| GET | `/api/logs` | Combined event log stream |
-| GET | `/api/sync-status` | Sync engine queue state |
-| GET | `/metrics` | Prometheus metrics endpoint |
-
----
 
 ## 🔮 Future Enhancements
 
@@ -309,7 +262,7 @@ docker compose up -d --no-deps dashboard-backend
 
 <div align="center">
 
-**Built with ❤️ for environments where the internet is a luxury, not a given.**
+**Built with ❤️ for environments where the internet is restricted or unstable.**
 
 *ForgeOps — Because your CI/CD pipeline shouldn't depend on someone else's cloud.*
 
